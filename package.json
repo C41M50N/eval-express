@@ -1,0 +1,49 @@
+{
+  "name": "@cbuff/eval-express",
+  "version": "0.1.0",
+  "author": "Charles Buffington",
+  "description": "Type-safe eval builder with scorer pipelines and run planning",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/C41M50N/eval-express.git"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./score-helpers": {
+      "types": "./dist/score-helpers/index.d.ts",
+      "import": "./dist/score-helpers/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "keywords": [
+    "eval",
+    "evaluation",
+    "llm",
+    "ai",
+    "scoring",
+    "typescript"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
