@@ -1,3 +1,5 @@
+# Eval Express
+
 Type-safe eval builder with scorer pipelines, run planning, and optional score aggregation.
 
 ## Installation
