@@ -1,13 +1,9 @@
-Type-safe eval builder with scorer pipelines, run records, and optional score aggregation.
+Type-safe eval builder with scorer pipelines, run planning, and optional score aggregation.
 
 ## Installation
 
 ```bash
 bun add @cbuff/eval-express
-```
-
-```bash
-npm install @cbuff/eval-express
 ```
 
 ## Usage
