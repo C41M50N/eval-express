@@ -39,7 +39,7 @@ const task = defineTask<EvalParams, string, string>({
 });
 
 const plans = planTask(task);
-const { runs } = await runTask(task, { maxConcurrency: 2 });
+const { runs } = await runTask(task, { runsPerEval: 3, maxConcurrency: 2 });
 ```
 
 ## Scoring
