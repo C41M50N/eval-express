@@ -156,6 +156,13 @@ export type EvalRunRecord<EvalParams, TaskInput, TaskOutput> = {
   metadata?: Record<string, unknown>;
 };
 
+export type SaveRunsOptions<
+  TRun extends EvalRunRecord<any, any, any> = EvalRunRecord<any, any, any>,
+> = {
+  serializer?: (run: TRun) => unknown;
+  pretty?: boolean;
+};
+
 export type RunTaskOptions = {
   runsPerEval?: number;
   maxConcurrency?: number;

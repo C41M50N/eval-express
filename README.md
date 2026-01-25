@@ -9,7 +9,7 @@ bun add @cbuff/eval-express
 ## Usage
 
 ```typescript
-import { defineTask, planTask, runTask } from "@cbuff/eval-express";
+import { defineTask, planTask, runTask, saveRuns } from "@cbuff/eval-express";
 import { ai } from "@example/ai";
 
 type EvalParams = { model: string };
@@ -40,6 +40,7 @@ const task = defineTask<EvalParams, string, string>({
 
 const plans = planTask(task);
 const { runs } = await runTask(task, { runsPerEval: 3, maxConcurrency: 2 });
+await saveRuns(runs, "./runs.json", { pretty: true });
 ```
 
 ## Scoring
@@ -93,6 +94,10 @@ Returns a flat list of validated task plans without running anything.
 ### `runTask(task, options)`
 
 Executes a task, scoring as part of the run pipeline and returning typed run records.
+
+### `saveRuns(runs, filePath, options?)`
+
+Writes run records to disk as JSON, with an optional serializer for non-JSON data.
 
 ## License
 

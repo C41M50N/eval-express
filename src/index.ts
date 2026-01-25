@@ -2,6 +2,7 @@ export { defineTask } from "./define-task.js";
 export { interpolate } from "./interpolate.js";
 export type { InterpolateValues } from "./interpolate.js";
 export { planTask, runTask } from "./run.js";
+export { saveRuns } from "./save-runs.js";
 export { builtInScorers } from "./scorers.js";
 export type {
   BuiltInScorerName,
@@ -16,6 +17,7 @@ export type {
   RunStatus,
   RunTaskOptions,
   RunTaskResult,
+  SaveRunsOptions,
   ScoreContext,
   ScoreResult,
   ScorerFn,
