@@ -10,56 +10,36 @@ bun add @cbuff/eval-express
 
 ```typescript
 import { defineTask, planTask, runTask } from "@cbuff/eval-express";
+import { ai } from "@example/ai";
 
-type EvalParams = {
-  prompt: string;
-  model: "fast" | "smart";
-  temperature: number;
-};
+type EvalParams = { model: string };
 
 const task = defineTask<EvalParams, string, string>({
-  name: "HTML to Markdown",
+  name: "Support Ticket Title",
   scorer: "string_fuzzy_match",
-  scorers: {
-    custom_scorer: async (_ctx, output, expected) => {
-      const outputLines = output
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean);
-      const expectedLines = expected
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean);
-      const matches = outputLines.filter((line) => expectedLines.includes(line))
-        .length;
-
-      return { score: matches / expectedLines.length, label: "line_match" };
-    },
+  task: async (_id, input, { model }) => {
+    const { data } = await ai.generate({ model, prompt: `Write a short title:\n${input}` });
+    return data;
   },
-  task: async (id, input, params) => {
-    return `${id}:${params.model}:${params.temperature}:${input}`;
-  },
-  defaults: {
-    temperature: 0.2,
-  },
-  matrix: {
-    model: ["fast", "smart"],
-    temperature: [0.0, 0.2],
-  },
+  defaults: { model: "openai/gpt-5-nano" },
   evals: [
     {
-      input: "<h1>Hello</h1>",
-      expectedOutput: "# Hello",
-      prompt: "Convert HTML to Markdown",
-      scorer: "custom_scorer",
+      input: "We can't reset our password after the latest update.",
+      expectedOutput: "Password reset broken after update",
+    },
+    {
+      input: "The app crashes whenever I try to upload a photo.",
+      expectedOutput: "App crashes on photo upload",
+    },
+    {
+      input: "How do I change my account email address?",
+      expectedOutput: "Change account email address",
     },
   ],
 });
 
 const plans = planTask(task);
-const { runs } = await runTask(task, { runsPerEval: 1, maxConcurrency: 2 });
-
-console.log(runs[0]?.score);
+const { runs } = await runTask(task, { maxConcurrency: 2 });
 ```
 
 ## Scoring
