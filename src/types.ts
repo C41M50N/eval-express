@@ -65,6 +65,12 @@ type ReservedEvalParams = {
 
 export type EvalParamsShape = Record<string, unknown> & ReservedEvalParams;
 
+export type RunFieldsShape = Record<string, unknown>;
+
+export type RunFieldSetter<RunFields extends RunFieldsShape> = (
+  fields: RunFields,
+) => void;
+
 export type Matrix<EvalParams> = Partial<{
   [Key in keyof EvalParams]: ReadonlyArray<EvalParams[Key]>;
 }>;
@@ -83,10 +89,16 @@ export type EvalCase<
   metadata?: Record<string, unknown>;
 } & Partial<EvalParams>;
 
-export type TaskRunner<EvalParams, TaskInput, TaskOutput> = (
+export type TaskRunner<
+  EvalParams,
+  TaskInput,
+  TaskOutput,
+  RunFields extends RunFieldsShape = RunFieldsShape,
+> = (
   id: string,
   input: TaskInput,
   params: EvalParams,
+  setRunFields: RunFieldSetter<RunFields>,
 ) => TaskOutput | Promise<TaskOutput>;
 
 export type TaskDefinition<
@@ -94,10 +106,11 @@ export type TaskDefinition<
   TaskInput,
   TaskOutput,
   Scorers extends ScorerRegistry<EvalParams, TaskInput, TaskOutput> = {},
+  RunFields extends RunFieldsShape = RunFieldsShape,
 > = {
   name: string;
   description?: string;
-  task: TaskRunner<EvalParams, TaskInput, TaskOutput>;
+  task: TaskRunner<EvalParams, TaskInput, TaskOutput, RunFields>;
   defaults?: Partial<EvalParams>;
   matrix?: Matrix<EvalParams>;
   scorers?: Scorers;
@@ -109,7 +122,8 @@ export type TaskDefinitionAny = TaskDefinition<
   any,
   any,
   any,
-  ScorerRegistry<any, any, any>
+  ScorerRegistry<any, any, any>,
+  RunFieldsShape
 >;
 
 export type TaskPlan<EvalParams, TaskInput, TaskOutput> = {
@@ -128,6 +142,7 @@ export type TaskPlanFromTask<TTask> = TTask extends TaskDefinition<
   infer EvalParams,
   infer TaskInput,
   infer TaskOutput,
+  any,
   any
 >
   ? TaskPlan<EvalParams, TaskInput, TaskOutput>
@@ -135,7 +150,12 @@ export type TaskPlanFromTask<TTask> = TTask extends TaskDefinition<
 
 export type RunStatus = "success" | "error";
 
-export type EvalRunRecord<EvalParams, TaskInput, TaskOutput> = {
+export type EvalRunRecord<
+  EvalParams,
+  TaskInput,
+  TaskOutput,
+  RunFields extends RunFieldsShape = RunFieldsShape,
+> = {
   id: string;
   status: RunStatus;
   taskName: string;
@@ -154,10 +174,11 @@ export type EvalRunRecord<EvalParams, TaskInput, TaskOutput> = {
   finishedAt: string;
   durationMs: number;
   metadata?: Record<string, unknown>;
+  runFields?: RunFields;
 };
 
 export type SaveRunsOptions<
-  TRun extends EvalRunRecord<any, any, any> = EvalRunRecord<any, any, any>,
+  TRun extends EvalRunRecord<any, any, any, any> = EvalRunRecord<any, any, any, any>,
 > = {
   serializer?: (run: TRun) => unknown;
   pretty?: boolean;
@@ -173,9 +194,10 @@ export type RunRecordFromTask<TTask> = TTask extends TaskDefinition<
   infer EvalParams,
   infer TaskInput,
   infer TaskOutput,
-  any
+  any,
+  infer RunFields
 >
-  ? EvalRunRecord<EvalParams, TaskInput, TaskOutput>
+  ? EvalRunRecord<EvalParams, TaskInput, TaskOutput, RunFields>
   : never;
 
 export type PlanTaskResult<TTask extends TaskDefinitionAny> =

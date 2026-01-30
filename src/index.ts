@@ -14,6 +14,8 @@ export type {
   Matrix,
   PlanTaskResult,
   RunRecordFromTask,
+  RunFieldSetter,
+  RunFieldsShape,
   RunStatus,
   RunTaskOptions,
   RunTaskResult,

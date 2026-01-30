@@ -15,12 +15,17 @@ import { defineTask, planTask, runTask, saveRuns } from "@cbuff/eval-express";
 import { ai } from "@example/ai";
 
 type EvalParams = { model: string };
+type RunFields = { cost: number };
 
-const task = defineTask<EvalParams, string, string>({
+const task = defineTask<EvalParams, string, string, {}, RunFields>({
   name: "Support Ticket Title",
   scorer: "string_fuzzy_match",
-  task: async (_id, input, { model }) => {
-    const { data } = await ai.generate({ model, prompt: `Write a short title:\n${input}` });
+  task: async (_id, input, { model }, setRunFields) => {
+    const { data, metadata } = await ai.generate({
+      model,
+      prompt: `Write a short title:\n${input}`,
+    });
+    setRunFields({ cost: metadata.totalCost });
     return data;
   },
   defaults: { model: "openai/gpt-5-nano" },
@@ -96,6 +101,11 @@ Returns a flat list of validated task plans without running anything.
 ### `runTask(task, options)`
 
 Executes a task, scoring as part of the run pipeline and returning typed run records.
+
+### Run fields
+
+Tasks receive `setRunFields(fields)` to attach run-level fields to the run record. If
+called multiple times, the last call wins.
 
 ### `saveRuns(runs, filePath, options?)`
 

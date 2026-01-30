@@ -4,6 +4,8 @@ import type {
   EvalParamsShape,
   EvalRunRecord,
   Matrix,
+  RunFieldSetter,
+  RunFieldsShape,
   RunTaskOptions,
   RunTaskResult,
   ScorerFn,
@@ -29,6 +31,7 @@ type PlanEntry<
   TaskInput,
   TaskOutput,
   Scorers extends ScorerRegistry<EvalParams, TaskInput, TaskOutput>,
+  RunFields extends RunFieldsShape,
 > = {
   plan: TaskPlan<EvalParams, TaskInput, TaskOutput>;
   evalCase: EvalCase<EvalParams, TaskInput, TaskOutput, Scorers>;
@@ -42,8 +45,9 @@ type ExecutionPlan<
   TaskInput,
   TaskOutput,
   Scorers extends ScorerRegistry<EvalParams, TaskInput, TaskOutput>,
+  RunFields extends RunFieldsShape,
 > = {
-  entry: PlanEntry<EvalParams, TaskInput, TaskOutput, Scorers>;
+  entry: PlanEntry<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>;
   attempt: number;
 };
 
@@ -192,12 +196,19 @@ const buildPlanEntries = <
   TaskInput,
   TaskOutput,
   Scorers extends ScorerRegistry<EvalParams, TaskInput, TaskOutput>,
+  RunFields extends RunFieldsShape,
 >(
-  task: TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers>,
-): PlanEntry<EvalParams, TaskInput, TaskOutput, Scorers>[] => {
+  task: TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>,
+): PlanEntry<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>[] => {
   const matrixCombos = buildMatrixCombinations(task.matrix, task.name);
   const evalIds = new Set<string>();
-  const entries: PlanEntry<EvalParams, TaskInput, TaskOutput, Scorers>[] = [];
+  const entries: PlanEntry<
+    EvalParams,
+    TaskInput,
+    TaskOutput,
+    Scorers,
+    RunFields
+  >[] = [];
 
   task.evals.forEach((evalCase, evalIndex) => {
     const evalId = createEvalId(
@@ -301,17 +312,23 @@ const executePlan = async <
   TaskInput,
   TaskOutput,
   Scorers extends ScorerRegistry<EvalParams, TaskInput, TaskOutput>,
+  RunFields extends RunFieldsShape,
 >(
-  task: TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers>,
-  plan: ExecutionPlan<EvalParams, TaskInput, TaskOutput, Scorers>,
+  task: TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>,
+  plan: ExecutionPlan<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>,
   verbose: boolean,
-): Promise<EvalRunRecord<EvalParams, TaskInput, TaskOutput>> => {
+): Promise<EvalRunRecord<EvalParams, TaskInput, TaskOutput, RunFields>> => {
   const { entry, attempt } = plan;
   const { evalCase, params, scorerName, scorerFn } = entry;
   const { plan: planDetails } = entry;
   const runId = createRunId();
   const startedAt = new Date();
   const startMs = Date.now();
+  let runFields: RunFields | undefined;
+
+  const setRunFields: RunFieldSetter<RunFields> = (fields) => {
+    runFields = fields;
+  };
 
   if (verbose) {
     const label = planDetails.evalName ?? planDetails.evalId;
@@ -323,7 +340,12 @@ const executePlan = async <
   let error: unknown;
 
   try {
-    output = await task.task(planDetails.evalId, planDetails.input, params);
+    output = await task.task(
+      planDetails.evalId,
+      planDetails.input,
+      params,
+      setRunFields,
+    );
 
     if (scorerName && scorerFn) {
       const evalContext = {
@@ -385,6 +407,7 @@ const executePlan = async <
     finishedAt: finishedAt.toISOString(),
     durationMs,
     metadata: planDetails.metadata,
+    runFields,
   };
 };
 
@@ -393,8 +416,9 @@ export const planTask = <
   TaskInput,
   TaskOutput,
   Scorers extends ScorerRegistry<EvalParams, TaskInput, TaskOutput> = {},
+  RunFields extends RunFieldsShape = RunFieldsShape,
 >(
-  task: TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers>,
+  task: TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>,
 ): TaskPlan<EvalParams, TaskInput, TaskOutput>[] => {
   const entries = buildPlanEntries(task);
   return entries.map((entry) => entry.plan);
@@ -405,11 +429,14 @@ export const runTask = async <
   TaskInput,
   TaskOutput,
   Scorers extends ScorerRegistry<EvalParams, TaskInput, TaskOutput> = {},
+  RunFields extends RunFieldsShape = RunFieldsShape,
 >(
-  task: TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers>,
+  task: TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>,
   options: RunTaskOptions = {},
 ): Promise<
-  RunTaskResult<TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers>>
+  RunTaskResult<
+    TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>
+  >
 > => {
   const normalizedOptions: Required<RunTaskOptions> = {
     runsPerEval: Math.max(1, options.runsPerEval ?? 1),
@@ -419,7 +446,7 @@ export const runTask = async <
 
   const entries = buildPlanEntries(task);
   const executionPlans: Array<
-    ExecutionPlan<EvalParams, TaskInput, TaskOutput, Scorers>
+    ExecutionPlan<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>
   > = [];
 
   for (const entry of entries) {

@@ -64,7 +64,7 @@ const writeFile = async (filePath: string, contents: string): Promise<void> => {
   await writeFile(filePath, contents, "utf8");
 };
 
-export const saveRuns = async <TRun extends EvalRunRecord<any, any, any>>(
+export const saveRuns = async <TRun extends EvalRunRecord<any, any, any, any>>(
   runs: readonly TRun[],
   filePath: string,
   options: SaveRunsOptions<TRun> = {},
