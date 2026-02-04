@@ -114,3 +114,11 @@ Writes run records to disk as JSON, with an optional serializer for non-JSON dat
 ## License
 
 MIT
+
+## Release process
+
+This package uses Changesets to manage versions and changelogs.
+
+- Create a changeset with `bun run changeset`
+- Merge the release PR created by the GitHub Actions workflow
+- The release workflow publishes to npm on main
