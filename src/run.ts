@@ -1,3 +1,4 @@
+import { customAlphabet } from "nanoid";
 import { builtInScorers } from "./scorers.js";
 import type {
   EvalCase,
@@ -51,13 +52,12 @@ type ExecutionPlan<
   attempt: number;
 };
 
-const createRunId = (): string => {
-  if (globalThis.crypto?.randomUUID) {
-    return `run_${globalThis.crypto.randomUUID()}`;
-  }
+const BASE58_ALPHABET =
+  "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+const RUN_ID_SIZE = 22;
+const generateRunId = customAlphabet(BASE58_ALPHABET, RUN_ID_SIZE);
 
-  return `run_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-};
+const createRunId = (): string => `run_${generateRunId()}`;
 
 const slugify = (value: string): string =>
   value
@@ -346,8 +346,17 @@ const executePlan = async <
       params,
       setRunFields,
     );
+  } catch (caught) {
+    error = caught;
+    console.error(
+      `[eval-express] ${task.name} :: ${planDetails.evalId} task error (run ${attempt}).`,
+      caught,
+    );
+  }
 
-    if (scorerName && scorerFn) {
+  if (!error && scorerName && scorerFn) {
+    try {
+      const taskOutput = output as TaskOutput;
       const evalContext = {
         ...evalCase,
         id: planDetails.evalId,
@@ -365,11 +374,11 @@ const executePlan = async <
         attempt,
       };
 
-      const rawScore = await scorerFn(ctx, output, planDetails.expectedOutput);
+      const rawScore = await scorerFn(ctx, taskOutput, planDetails.expectedOutput);
       score = ensureScoreResult(rawScore, scorerName);
+    } catch (caught) {
+      error = caught;
     }
-  } catch (caught) {
-    error = caught;
   }
 
   const finishedAt = new Date();
