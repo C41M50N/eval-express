@@ -38,5 +38,15 @@ jobs:
         if: steps.changesets.outputs.published == 'true'
         run: |
           version=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
-          git tag "v${version}"
-          git push origin "v${version}"
+          tag="v${version}"
+          git fetch --tags
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "Tag ${tag} already exists. Skipping."
+            exit 0
+          fi
+          if [ -n "$(git ls-remote --tags origin "${tag}")" ]; then
+            echo "Tag ${tag} already exists on origin. Skipping."
+            exit 0
+          fi
+          git tag "${tag}"
+          git push origin "${tag}"
