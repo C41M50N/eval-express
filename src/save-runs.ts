@@ -33,7 +33,7 @@ const createJsonReplacer = () => {
     }
 
     if (typeof value === "function") {
-      return `[Function${value.name ? `: ${value.name}` : ""}]`;
+      return `${value.name.length > 0 ? value.name : "anonymous"}()`;
     }
 
     if (typeof value === "symbol") {

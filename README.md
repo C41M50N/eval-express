@@ -78,6 +78,46 @@ Scorer resolution order:
 2. `task.scorer`
 3. Skip scoring if no scorer is configured
 
+## Comparing workflows and agents (or any set of functions)
+
+To evaluate different workflows or agents against the same evals, set a matrix
+param to a list of **functions** and have your single task function dispatch to
+whichever one the run selected. The matrix expands into one run per function
+(crossed with every eval), so each subject is measured under identical
+conditions.
+
+```typescript
+type EvalParams = { agent: (input: string) => Promise<string> };
+
+async function runAgentV1(input: string) {
+  /* ... */
+  return "…";
+}
+
+async function runAgentV2(input: string) {
+  /* ... */
+  return "…";
+}
+
+const task = defineTask<EvalParams, string, string>({
+  name: "Agent Comparison",
+  scorer: "string_fuzzy_match",
+  // The task fn is a thin harness that runs whichever agent this run selected.
+  task: (_id, input, { agent }) => agent(input),
+  matrix: {
+    agent: [runAgentV1, runAgentV2],
+  },
+  evals: [
+    { input: "…", expectedOutput: "…" },
+  ],
+});
+```
+
+> **Use named functions.** The subject of each run is identified by the
+> function's `name`, so pass named function declarations or named references —
+> not inline anonymous arrow functions, which serialize without a name and
+> become indistinguishable from one another.
+
 ## Score helpers
 
 Optional aggregation utilities live in a subpath:
