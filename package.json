@@ -1,6 +1,6 @@
 {
   "name": "@cbuff/eval-express",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Type-safe eval builder with scorer pipelines and run planning",
   "keywords": [
     "ai",
