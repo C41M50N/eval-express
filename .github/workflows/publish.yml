@@ -53,17 +53,25 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump version, commit, tag and push
-        run: bunx bumpp "${{ inputs.release }}" --yes --commit --tag --push
+      # Bump + commit + tag LOCALLY only. Nothing is pushed to the remote yet, so
+      # if a later step fails the repo is left untouched (no orphan tag/commit).
+      - name: Bump version, commit and tag
+        run: bunx bumpp "${{ inputs.release }}" --yes --commit --tag --no-push
 
       - name: Read released version
         id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
+      # Publish first — this is the step most likely to fail. If it does, the
+      # local commit/tag are discarded with the runner and never reach origin.
       - name: Publish to npm
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Only after a successful publish do we push the release commit and tag.
+      - name: Push release commit and tag
+        run: |
+          git push origin HEAD
+          git push origin "v${{ steps.version.outputs.version }}"
 
       - name: Create GitHub release
         run: gh release create "v${{ steps.version.outputs.version }}"
