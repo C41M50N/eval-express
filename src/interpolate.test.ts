@@ -8,20 +8,14 @@ describe("interpolate", () => {
   });
 
   it("leaves unknown placeholders intact", () => {
-    expect(interpolate("Hello {{name}} {{unknown}}", { name: "Ada" })).toBe(
-      "Hello Ada {{unknown}}",
-    );
+    expect(interpolate("Hello {{name}} {{unknown}}", { name: "Ada" })).toBe("Hello Ada {{unknown}}");
   });
 
   it("supports keys with separators", () => {
-    expect(interpolate("Hello {{user.name}}", { "user.name": "Ada" })).toBe(
-      "Hello Ada",
-    );
+    expect(interpolate("Hello {{user.name}}", { "user.name": "Ada" })).toBe("Hello Ada");
   });
 
   it("supports escaping literal braces", () => {
-    expect(interpolate("Show \\{{name}} and {{name}}", { name: "Ada" })).toBe(
-      "Show {{name}} and Ada",
-    );
+    expect(interpolate("Show \\{{name}} and {{name}}", { name: "Ada" })).toBe("Show {{name}} and Ada");
   });
 });

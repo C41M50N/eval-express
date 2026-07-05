@@ -1,15 +1,6 @@
-import type {
-  EvalParamsShape,
-  RunFieldsShape,
-  ScorerRegistry,
-  TaskDefinition,
-} from "./types.js";
+import type { EvalParamsShape, RunFieldsShape, ScorerRegistry, TaskDefinition } from "./types.js";
 
-export function defineTask<
-  EvalParams extends EvalParamsShape,
-  TaskInput,
-  TaskOutput,
->(): <
+export function defineTask<EvalParams extends EvalParamsShape, TaskInput, TaskOutput>(): <
   Scorers extends ScorerRegistry<EvalParams, TaskInput, TaskOutput> = {},
   RunFields extends RunFieldsShape = RunFieldsShape,
 >(

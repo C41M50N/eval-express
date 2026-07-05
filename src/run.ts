@@ -1,4 +1,5 @@
 import { customAlphabet } from "nanoid";
+
 import { builtInScorers } from "./scorers.js";
 import type {
   EvalCase,
@@ -18,21 +19,14 @@ import type {
 } from "./types.js";
 import type { BuiltInScorerName } from "./types.js";
 
-const RESERVED_EVAL_KEYS = new Set([
-  "id",
-  "name",
-  "input",
-  "expectedOutput",
-  "scorer",
-  "metadata",
-]);
+const RESERVED_EVAL_KEYS = new Set(["id", "name", "input", "expectedOutput", "scorer", "metadata"]);
 
 type PlanEntry<
   EvalParams extends EvalParamsShape,
   TaskInput,
   TaskOutput,
   Scorers extends ScorerRegistry<EvalParams, TaskInput, TaskOutput>,
-  RunFields extends RunFieldsShape,
+  _RunFields extends RunFieldsShape,
 > = {
   plan: TaskPlan<EvalParams, TaskInput, TaskOutput>;
   evalCase: EvalCase<EvalParams, TaskInput, TaskOutput, Scorers>;
@@ -52,8 +46,7 @@ type ExecutionPlan<
   attempt: number;
 };
 
-const BASE58_ALPHABET =
-  "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 const RUN_ID_SIZE = 22;
 const generateRunId = customAlphabet(BASE58_ALPHABET, RUN_ID_SIZE);
 
@@ -84,11 +77,7 @@ const createEvalId = (
   return `eval-${index + 1}`;
 };
 
-const createPlanId = (
-  taskName: string,
-  evalId: string,
-  matrixIndex: number,
-): string => {
+const createPlanId = (taskName: string, evalId: string, matrixIndex: number): string => {
   const taskSlug = slugify(taskName) || "task";
   const evalSlug = slugify(evalId) || `eval-${matrixIndex + 1}`;
   return `plan-${taskSlug}-${evalSlug}-${matrixIndex + 1}`;
@@ -103,11 +92,7 @@ const resolveScorer = <EvalParams, TaskInput, TaskOutput>(
   }
 
   if (Object.hasOwn(builtInScorers, name)) {
-    return builtInScorers[name as BuiltInScorerName] as ScorerFn<
-      EvalParams,
-      TaskInput,
-      TaskOutput
-    >;
+    return builtInScorers[name as BuiltInScorerName] as ScorerFn<EvalParams, TaskInput, TaskOutput>;
   }
 
   return undefined;
@@ -115,16 +100,12 @@ const resolveScorer = <EvalParams, TaskInput, TaskOutput>(
 
 const ensureScoreResult = (value: unknown, scorerName: string): ScoreResult => {
   if (!value || typeof value !== "object") {
-    throw new Error(
-      `Scorer "${scorerName}" returned an invalid score result object.`,
-    );
+    throw new Error(`Scorer "${scorerName}" returned an invalid score result object.`);
   }
 
   const score = (value as ScoreResult).score;
   if (typeof score !== "number" || Number.isNaN(score)) {
-    throw new Error(
-      `Scorer "${scorerName}" returned a non-numeric score value.`,
-    );
+    throw new Error(`Scorer "${scorerName}" returned a non-numeric score value.`);
   }
 
   return value as ScoreResult;
@@ -134,9 +115,7 @@ const extractEvalParams = <EvalParams extends EvalParamsShape>(
   evalCase: EvalCase<EvalParams, unknown, unknown, ScorerRegistry<any, any, any>>,
 ): Partial<EvalParams> => {
   const params: Partial<EvalParams> = {};
-  for (const [key, value] of Object.entries(
-    evalCase as Record<string, unknown>,
-  )) {
+  for (const [key, value] of Object.entries(evalCase as Record<string, unknown>)) {
     if (RESERVED_EVAL_KEYS.has(key)) {
       continue;
     }
@@ -162,9 +141,7 @@ const buildMatrixCombinations = <EvalParams extends Record<string, unknown>>(
 
   const entries = Object.entries(matrix).map(([key, values]) => {
     if (!Array.isArray(values) || values.length === 0) {
-      throw new Error(
-        `Matrix entry "${key}" must be a non-empty array for task "${taskName}".`,
-      );
+      throw new Error(`Matrix entry "${key}" must be a non-empty array for task "${taskName}".`);
     }
 
     return [
@@ -202,49 +179,29 @@ const buildPlanEntries = <
 ): PlanEntry<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>[] => {
   const matrixCombos = buildMatrixCombinations(task.matrix, task.name);
   const evalIds = new Set<string>();
-  const entries: PlanEntry<
-    EvalParams,
-    TaskInput,
-    TaskOutput,
-    Scorers,
-    RunFields
-  >[] = [];
+  const entries: PlanEntry<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>[] = [];
 
   task.evals.forEach((evalCase, evalIndex) => {
     const evalId = createEvalId(
-      evalCase as EvalCase<
-        EvalParamsShape,
-        unknown,
-        unknown,
-        ScorerRegistry<any, any, any>
-      >,
+      evalCase as EvalCase<EvalParamsShape, unknown, unknown, ScorerRegistry<any, any, any>>,
       evalIndex,
     );
 
     if (evalIds.has(evalId)) {
-      throw new Error(
-        `Eval id "${evalId}" is duplicated in task "${task.name}".`,
-      );
+      throw new Error(`Eval id "${evalId}" is duplicated in task "${task.name}".`);
     }
 
     evalIds.add(evalId);
 
     const evalParams = extractEvalParams(
-      evalCase as EvalCase<
-        EvalParamsShape,
-        unknown,
-        unknown,
-        ScorerRegistry<any, any, any>
-      >,
+      evalCase as EvalCase<EvalParamsShape, unknown, unknown, ScorerRegistry<any, any, any>>,
     ) as Partial<EvalParams>;
 
     const scorerName = evalCase.scorer ?? task.scorer;
     const scorerFn = scorerName ? resolveScorer(scorerName, task.scorers) : undefined;
 
     if (scorerName && !scorerFn) {
-      throw new Error(
-        `Scorer "${scorerName}" is not registered for task "${task.name}".`,
-      );
+      throw new Error(`Scorer "${scorerName}" is not registered for task "${task.name}".`);
     }
 
     matrixCombos.forEach((combo, matrixIndex) => {
@@ -284,7 +241,7 @@ const runWithConcurrency = async <T, R>(
   handler: (item: T, index: number) => Promise<R>,
   concurrency: number,
 ): Promise<R[]> => {
-  const results = new Array<R>(items.length);
+  const results = Array.from<R>({ length: items.length });
   let nextIndex = 0;
 
   const workers = Array.from({ length: concurrency }, async () => {
@@ -340,18 +297,10 @@ const executePlan = async <
   let error: unknown;
 
   try {
-    output = await task.task(
-      planDetails.evalId,
-      planDetails.input,
-      params,
-      setRunFields,
-    );
+    output = await task.task(planDetails.evalId, planDetails.input, params, setRunFields);
   } catch (caught) {
     error = caught;
-    console.error(
-      `[eval-express] ${task.name} :: ${planDetails.evalId} task error (run ${attempt}).`,
-      caught,
-    );
+    console.error(`[eval-express] ${task.name} :: ${planDetails.evalId} task error (run ${attempt}).`, caught);
   }
 
   if (!error && scorerName && scorerFn) {
@@ -387,13 +336,9 @@ const executePlan = async <
 
   if (verbose) {
     if (error) {
-      console.log(
-        `[eval-express] ${task.name} :: ${planDetails.evalId} failed (${status}).`,
-      );
+      console.log(`[eval-express] ${task.name} :: ${planDetails.evalId} failed (${status}).`);
     } else if (score) {
-      console.log(
-        `[eval-express] ${task.name} :: ${planDetails.evalId} scored ${score.score}.`,
-      );
+      console.log(`[eval-express] ${task.name} :: ${planDetails.evalId} scored ${score.score}.`);
     }
   }
 
@@ -442,11 +387,7 @@ export const runTask = async <
 >(
   task: TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>,
   options: RunTaskOptions = {},
-): Promise<
-  RunTaskResult<
-    TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>
-  >
-> => {
+): Promise<RunTaskResult<TaskDefinition<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>>> => {
   const normalizedOptions: Required<RunTaskOptions> = {
     runsPerEval: Math.max(1, options.runsPerEval ?? 1),
     maxConcurrency: Math.max(1, options.maxConcurrency ?? 1),
@@ -454,9 +395,7 @@ export const runTask = async <
   };
 
   const entries = buildPlanEntries(task);
-  const executionPlans: Array<
-    ExecutionPlan<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>
-  > = [];
+  const executionPlans: Array<ExecutionPlan<EvalParams, TaskInput, TaskOutput, Scorers, RunFields>> = [];
 
   for (const entry of entries) {
     for (let attempt = 1; attempt <= normalizedOptions.runsPerEval; attempt += 1) {

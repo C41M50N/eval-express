@@ -31,9 +31,7 @@ const collectScores = <T extends ScoredItem>(items: readonly T[]): number[] => {
   return scores;
 };
 
-export const meanScore = <T extends ScoredItem>(
-  items: readonly T[],
-): number | null => {
+export const meanScore = <T extends ScoredItem>(items: readonly T[]): number | null => {
   const scores = collectScores(items);
   if (scores.length === 0) {
     return null;
@@ -43,9 +41,7 @@ export const meanScore = <T extends ScoredItem>(
   return total / scores.length;
 };
 
-export const medianScore = <T extends ScoredItem>(
-  items: readonly T[],
-): number | null => {
+export const medianScore = <T extends ScoredItem>(items: readonly T[]): number | null => {
   const scores = collectScores(items);
   if (scores.length === 0) {
     return null;
@@ -69,10 +65,7 @@ export const medianScore = <T extends ScoredItem>(
   return value === undefined ? null : value;
 };
 
-export const passRate = <T extends ScoredItem>(
-  items: readonly T[],
-  options: PassRateOptions = {},
-): number | null => {
+export const passRate = <T extends ScoredItem>(items: readonly T[], options: PassRateOptions = {}): number | null => {
   const { threshold, includeMissing = false } = options;
 
   let passCount = 0;

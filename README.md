@@ -107,9 +107,7 @@ const task = defineTask<EvalParams, string, string>({
   matrix: {
     agent: [runAgentV1, runAgentV2],
   },
-  evals: [
-    { input: "…", expectedOutput: "…" },
-  ],
+  evals: [{ input: "…", expectedOutput: "…" }],
 });
 ```
 

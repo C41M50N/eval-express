@@ -1,12 +1,24 @@
 {
   "name": "@cbuff/eval-express",
   "version": "0.3.0",
-  "author": "Charles Buffington",
   "description": "Type-safe eval builder with scorer pipelines and run planning",
+  "keywords": [
+    "ai",
+    "eval",
+    "evaluation",
+    "llm",
+    "scoring",
+    "typescript"
+  ],
+  "license": "MIT",
+  "author": "Charles Buffington",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/C41M50N/eval-express.git"
   },
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,38 +32,30 @@
       "import": "./dist/score-helpers/index.js"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "changeset": "changeset",
     "dev": "tsc -p tsconfig.build.json --watch",
-    "release": "bun run build && changeset publish",
-    "version": "changeset version",
-    "typecheck": "tsc -p tsconfig.build.json --noEmit"
-  },
-  "devDependencies": {
-    "@changesets/changelog-github": "^0.5.2",
-    "@changesets/cli": "^2.29.8",
-    "@types/bun": "latest"
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "test": "bun test",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "bump": "bumpp"
   },
   "dependencies": {
     "nanoid": "^5.1.6"
   },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "bumpp": "^11.1.0",
+    "oxfmt": "^0.44.0",
+    "oxlint": "^1.59.0"
+  },
   "peerDependencies": {
     "typescript": "^5"
-  },
-  "keywords": [
-    "eval",
-    "evaluation",
-    "llm",
-    "ai",
-    "scoring",
-    "typescript"
-  ],
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
   }
 }
