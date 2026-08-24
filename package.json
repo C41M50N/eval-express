@@ -47,13 +47,13 @@
     "bump": "bumpp"
   },
   "dependencies": {
-    "nanoid": "^5.1.6"
+    "nanoid": "^5.1.16"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "bumpp": "^11.1.0",
     "oxfmt": "^0.44.0",
-    "oxlint": "^1.59.0"
+    "oxlint": "^1.78.0"
   },
   "peerDependencies": {
     "typescript": "^5"
