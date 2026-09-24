@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- The publish workflow now uses the matching `CHANGELOG.md` entry as the GitHub release notes, and stops before publishing if that entry is missing or empty.
+
 ## 0.4.0 - 2026-09-23
 
 ### Fixed
