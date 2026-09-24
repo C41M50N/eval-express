@@ -14,8 +14,15 @@ const toSerializable = (root: unknown): unknown => {
   const ancestors = new Set<object>();
 
   const visit = (key: string, input: unknown): unknown => {
-    // Mirror JSON.stringify, which applies toJSON (e.g. Date) before anything else.
-    const value = hasToJSON(input) ? input.toJSON(key) : input;
+    // Mirror JSON.stringify, which applies toJSON (e.g. Date) and then unwraps boxed primitives.
+    const unwrapped = hasToJSON(input) ? input.toJSON(key) : input;
+    const value =
+      unwrapped instanceof String ||
+      unwrapped instanceof Number ||
+      unwrapped instanceof Boolean ||
+      unwrapped instanceof BigInt
+        ? unwrapped.valueOf()
+        : unwrapped;
 
     if (typeof value === "bigint") {
       return value.toString();

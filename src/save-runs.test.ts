@@ -106,4 +106,17 @@ describe("saveRuns", () => {
       list: [null],
     });
   });
+
+  it("unwraps boxed primitives", async () => {
+    const [saved] = await saveAndRead([
+      {
+        string: new String("ab"),
+        number: new Number(1),
+        boolean: new Boolean(false),
+        big: Object(1n),
+      },
+    ]);
+
+    expect(saved).toEqual({ string: "ab", number: 1, boolean: false, big: "1" });
+  });
 });
