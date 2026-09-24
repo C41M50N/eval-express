@@ -10,7 +10,7 @@
 
 - The publish workflow can now release the version already in `package.json` without bumping it.
 - Add a scheduled GitHub Actions workflow for automated dependency updates and audits.
-- Update `nanoid` to 5.1.16 and development dependencies (`oxlint` to 1.78.0).
+- Update `nanoid` to 5.1.16 and development dependencies (`oxlint` to 1.80.0).
 - Add regression tests for `saveRuns`.
 
 ## 0.3.2 - 2026-07-05
