@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Allow TypeScript 6 and 7 as peer dependencies. The published JavaScript and type declarations are unchanged.
+- Build and typecheck with TypeScript 7.
 - The publish workflow now uses the matching `CHANGELOG.md` entry as the GitHub release notes, and stops before publishing if that entry is missing or empty.
 
 ## 0.4.0 - 2026-09-23
